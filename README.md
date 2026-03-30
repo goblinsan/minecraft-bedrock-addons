@@ -143,6 +143,7 @@ Scripts read configuration from `environments/<env>.env` and copy pack files to 
 | `deploy-pack.sh` | Deploy one pack to a named environment |
 | `deploy-all.sh` | Deploy every pack under `packs/` |
 | `sync-to-container.sh` | Copy files into a live Docker container |
+| `generate-uuid.sh` | Generate two unique UUID v4 values for a new manifest |
 
 Full details: [docs/deployment-guide.md](docs/deployment-guide.md)
 
