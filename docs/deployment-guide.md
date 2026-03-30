@@ -206,6 +206,23 @@ docker compose -f docker/examples/docker-compose.test.yml up -d
 docker compose -f docker/examples/docker-compose.prod.yml up -d
 ```
 
+### Start multiple servers in parallel
+
+`docker-compose.multi.yml` runs two servers side by side (survival + creative). Copy the matching environment templates and edit them before deploying packs:
+
+```bash
+cp environments/survival.example.env environments/survival.env
+cp environments/creative.example.env environments/creative.env
+docker compose -f docker/examples/docker-compose.multi.yml up -d
+```
+
+Deploy packs to each server using its environment file:
+
+```bash
+bash scripts/deploy-pack.sh days-survived survival
+bash scripts/deploy-pack.sh fun-pack creative
+```
+
 ### Restart a container after deployment
 
 ```bash

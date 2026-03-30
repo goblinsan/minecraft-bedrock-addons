@@ -23,6 +23,20 @@ The development loop:
 
 ## Step 1 — Create a New Pack
 
+### Use the Scaffold Script (Recommended)
+
+`new-pack.sh` creates the full directory structure, renames the function namespace, and injects two fresh UUIDs automatically:
+
+```bash
+bash scripts/new-pack.sh my-pack
+```
+
+Then edit `packs/my-pack/manifest.json` to set the pack's `name` and `description`, and add your mcfunction files under `packs/my-pack/functions/my-pack/`.
+
+### Manual Setup
+
+If you prefer to set up manually:
+
 ### Copy the Template Manifest
 
 ```bash
@@ -44,7 +58,11 @@ uuidgen   # copy for modules[0].uuid
 Or use `scripts/generate-uuid.sh`:
 
 ```bash
+# Print two UUIDs to stdout
 bash scripts/generate-uuid.sh
+
+# Inject directly into a manifest.json (replaces placeholder strings in-place)
+bash scripts/generate-uuid.sh --inject packs/my-pack/manifest.json
 ```
 
 ### Fill In manifest.json

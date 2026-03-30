@@ -1,0 +1,63 @@
+version: "3.9"
+
+# Multi-server example — two Bedrock Dedicated Server instances running in parallel.
+# Useful when you want to host separate game modes or worlds side by side
+# (e.g., a survival world and a creative/build world).
+#
+# Usage:
+#   docker compose -f docker/examples/docker-compose.multi.yml up -d
+#   docker compose -f docker/examples/docker-compose.multi.yml down
+#
+# Each service uses a different UDP port so both servers can run on the same host.
+# Map those ports through your router/firewall so players can reach each server.
+#
+# Corresponding environment configs:
+#   environments/survival.example.env
+#   environments/creative.example.env
+
+services:
+  bedrock-survival:
+    image: itzg/minecraft-bedrock-server:latest
+    container_name: bedrock-survival
+    environment:
+      EULA: "TRUE"
+      SERVER_NAME: "Survival World"
+      GAMEMODE: survival
+      DIFFICULTY: normal
+      ALLOW_CHEATS: "false"
+      LEVEL_NAME: SurvivalWorld
+    ports:
+      - "19133:19132/udp"   # Survival server — forward this port for players
+    volumes:
+      # World data — persists across restarts
+      - /opt/bedrock/survival/worlds:/data/worlds
+      # Behavior packs — scripts deploy here
+      - /opt/bedrock/survival/behavior_packs:/data/behavior_packs
+      # Resource packs — scripts deploy here
+      - /opt/bedrock/survival/resource_packs:/data/resource_packs
+    restart: unless-stopped
+    stdin_open: true
+    tty: true
+
+  bedrock-creative:
+    image: itzg/minecraft-bedrock-server:latest
+    container_name: bedrock-creative
+    environment:
+      EULA: "TRUE"
+      SERVER_NAME: "Creative World"
+      GAMEMODE: creative
+      DIFFICULTY: peaceful
+      ALLOW_CHEATS: "true"
+      LEVEL_NAME: CreativeWorld
+    ports:
+      - "19134:19132/udp"   # Creative server — forward this port for players
+    volumes:
+      # World data — persists across restarts
+      - /opt/bedrock/creative/worlds:/data/worlds
+      # Behavior packs — scripts deploy here
+      - /opt/bedrock/creative/behavior_packs:/data/behavior_packs
+      # Resource packs — scripts deploy here
+      - /opt/bedrock/creative/resource_packs:/data/resource_packs
+    restart: unless-stopped
+    stdin_open: true
+    tty: true
