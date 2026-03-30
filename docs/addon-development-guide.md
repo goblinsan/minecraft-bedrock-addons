@@ -183,7 +183,18 @@ Edit your `.mcfunction` files and repeat steps 3–5 until the pack behaves corr
 
 ## Step 7 — Promote to Production
 
-Once verified on the test server:
+Once verified on the test server, use `promote-to-prod.sh` to safely promote to production:
+
+```bash
+bash scripts/promote-to-prod.sh my-pack
+```
+
+This script:
+1. Re-validates the pack
+2. Checks the deployment log to confirm a prior test deployment exists
+3. Requires typing `yes` before deploying to the production server
+
+You can also call `deploy-pack.sh` directly, which will prompt for confirmation when targeting `prod`:
 
 ```bash
 bash scripts/deploy-pack.sh my-pack prod

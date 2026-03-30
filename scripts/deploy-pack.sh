@@ -61,6 +61,25 @@ fi
 
 echo "==> Deploying ${PACK_NAME} (${PACK_KIND}, UUID: ${PACK_UUID}) to ${ENV_NAME}..."
 
+# --- Production deployment guard ---
+# Require explicit confirmation when targeting production, unless the caller has
+# already confirmed (e.g. promote-to-prod.sh sets SKIP_PROD_CONFIRM=1).
+if [[ "${ENV_NAME}" == "prod" ]] && [[ "${SKIP_PROD_CONFIRM:-0}" != "1" ]]; then
+  echo ""
+  echo "WARNING: You are about to deploy to PRODUCTION."
+  echo "  Pack:       ${PACK_NAME}"
+  echo "  Container:  ${CONTAINER_NAME}"
+  echo ""
+  echo "Use 'bash scripts/promote-to-prod.sh ${PACK_NAME}' for the full test-verified"
+  echo "promotion workflow."
+  echo ""
+  read -rp "Type 'yes' to confirm direct production deployment: " _PROD_CONFIRM
+  if [[ "${_PROD_CONFIRM}" != "yes" ]]; then
+    echo "Aborted."
+    exit 1
+  fi
+fi
+
 # --- Back up existing pack in the container ---
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 BACKUP_DIR="${REPO_ROOT}/logs/backups/${PACK_NAME}-${TIMESTAMP}"
@@ -85,6 +104,6 @@ docker restart "${CONTAINER_NAME}"
 
 # --- Log the deployment ---
 mkdir -p "${REPO_ROOT}/logs"
-echo "[$(date '+%Y-%m-%d %H:%M:%S')] DEPLOY pack=${PACK_NAME} env=${ENV_NAME} uuid=${PACK_UUID} status=SUCCESS" >> "${LOG_FILE}"
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] DEPLOY pack=${PACK_NAME} env=${ENV_NAME} uuid=${PACK_UUID} backup=${BACKUP_DIR} status=SUCCESS" >> "${LOG_FILE}"
 
 echo "DONE: ${PACK_NAME} deployed to ${ENV_NAME}"
