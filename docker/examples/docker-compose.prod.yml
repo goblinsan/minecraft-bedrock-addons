@@ -1,0 +1,32 @@
+version: "3.9"
+
+# Production Bedrock Dedicated Server
+# Only deploy packs here after they have been verified on the test server.
+#
+# Usage:
+#   docker compose -f docker/examples/docker-compose.prod.yml up -d
+#   docker compose -f docker/examples/docker-compose.prod.yml down
+
+services:
+  bedrock-prod:
+    image: itzg/minecraft-bedrock-server:latest
+    container_name: bedrock-prod
+    environment:
+      EULA: "TRUE"
+      SERVER_NAME: "Bedrock Prod Server"
+      GAMEMODE: survival
+      DIFFICULTY: normal
+      ALLOW_CHEATS: "false"
+      LEVEL_NAME: ProdWorld
+    ports:
+      - "19132:19132/udp"   # Standard Bedrock port
+    volumes:
+      # World data — persists across restarts
+      - /opt/bedrock/prod/worlds:/data/worlds
+      # Behavior packs — scripts deploy here
+      - /opt/bedrock/prod/behavior_packs:/data/behavior_packs
+      # Resource packs — scripts deploy here
+      - /opt/bedrock/prod/resource_packs:/data/resource_packs
+    restart: unless-stopped
+    stdin_open: true
+    tty: true

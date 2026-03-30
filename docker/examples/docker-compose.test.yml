@@ -1,0 +1,32 @@
+version: "3.9"
+
+# Test Bedrock Dedicated Server
+# Used for verifying add-on behavior before promoting to production.
+#
+# Usage:
+#   docker compose -f docker/examples/docker-compose.test.yml up -d
+#   docker compose -f docker/examples/docker-compose.test.yml down
+
+services:
+  bedrock-test:
+    image: itzg/minecraft-bedrock-server:latest
+    container_name: bedrock-test
+    environment:
+      EULA: "TRUE"
+      SERVER_NAME: "Bedrock Test Server"
+      GAMEMODE: creative
+      DIFFICULTY: peaceful
+      ALLOW_CHEATS: "true"
+      LEVEL_NAME: TestWorld
+    ports:
+      - "19133:19132/udp"   # Test server on a different port to avoid conflict with prod
+    volumes:
+      # World data — persists across restarts
+      - /opt/bedrock/test/worlds:/data/worlds
+      # Behavior packs — scripts deploy here
+      - /opt/bedrock/test/behavior_packs:/data/behavior_packs
+      # Resource packs — scripts deploy here
+      - /opt/bedrock/test/resource_packs:/data/resource_packs
+    restart: unless-stopped
+    stdin_open: true
+    tty: true
