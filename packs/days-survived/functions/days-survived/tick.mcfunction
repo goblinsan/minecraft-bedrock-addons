@@ -14,8 +14,17 @@ execute as @a[scores={tick_counter=24000..}] run scoreboard players set @s tick_
 # Milestone: day 1
 execute as @a[scores={days_survived=1..},tag=!reward_day_1] run function days-survived/reward_day_1
 
-# Milestone: day 7
-execute as @a[scores={days_survived=7..},tag=!reward_day_7] run function days-survived/reward_day_7
+# Milestone: day 5
+execute as @a[scores={days_survived=5..},tag=!reward_day_5] run function days-survived/reward_day_5
 
-# Milestone: day 30
-execute as @a[scores={days_survived=30..},tag=!reward_day_30] run function days-survived/reward_day_30
+# Milestone: day 10
+execute as @a[scores={days_survived=10..},tag=!reward_day_10] run function days-survived/reward_day_10
+
+# Milestone: day 25
+execute as @a[scores={days_survived=25..},tag=!reward_day_25] run function days-survived/reward_day_25
+
+# Milestone: day 50
+execute as @a[scores={days_survived=50..},tag=!reward_day_50] run function days-survived/reward_day_50
+
+# Milestone: day 100
+execute as @a[scores={days_survived=100..},tag=!reward_day_100] run function days-survived/reward_day_100
