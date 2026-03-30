@@ -1,0 +1,21 @@
+# OS artifacts
+.DS_Store
+Thumbs.db
+
+# Editor configs
+.vscode/settings.json
+.idea/
+
+# Build output
+dist/
+*.zip
+
+# Environment overrides (keep .example files)
+environments/*.env
+!environments/*.example.env
+
+# Deployment logs
+logs/
+
+# Node (if any tooling is added later)
+node_modules/

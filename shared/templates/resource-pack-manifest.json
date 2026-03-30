@@ -1,0 +1,17 @@
+{
+  "format_version": 2,
+  "header": {
+    "name": "Resource Pack Name",
+    "description": "A short description of this resource pack.",
+    "uuid": "REPLACE-WITH-UNIQUE-UUID-v4-HEADER",
+    "version": [1, 0, 0],
+    "min_engine_version": [1, 20, 0]
+  },
+  "modules": [
+    {
+      "type": "resources",
+      "uuid": "REPLACE-WITH-UNIQUE-UUID-v4-MODULE",
+      "version": [1, 0, 0]
+    }
+  ]
+}
