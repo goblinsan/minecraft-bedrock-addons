@@ -2,7 +2,7 @@
   "format_version": 2,
   "header": {
     "name": "Days Survived",
-    "description": "Tracks how many in-game days each player has survived. Awards milestones at day 1, 7, and 30.",
+    "description": "Tracks how many in-game days each player has survived. Awards milestones at days 1, 5, 10, 25, 50, and 100.",
     "uuid": "8e842647-fe1f-4afd-9345-dd1dbe709c37",
     "version": [1, 0, 0],
     "min_engine_version": [1, 20, 0]
