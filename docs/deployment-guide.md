@@ -110,18 +110,64 @@ bash scripts/sync-to-container.sh <pack-name> <environment>
 bash scripts/sync-to-container.sh days-survived test
 ```
 
+### promote-to-prod.sh
+
+Orchestrates the full test-verified promotion workflow as a single safe command. Validates the pack, checks the deployment log for a prior successful test deployment, requires explicit "yes" confirmation, and then deploys to production.
+
+```bash
+bash scripts/promote-to-prod.sh <pack-name>
+
+# Example
+bash scripts/promote-to-prod.sh days-survived
+```
+
+**What it does:**
+1. Runs `validate-pack.sh` — fails fast if validation fails
+2. Checks `logs/deployments.log` for a recorded test deployment
+3. Warns and prompts if no test deployment is found
+4. Requires typing `yes` before touching production
+5. Calls `deploy-pack.sh <pack-name> prod`
+
+### rollback-pack.sh
+
+Restores a pack from an automatic backup created by `deploy-pack.sh` and re-deploys it to the target environment. Optionally accepts a specific backup timestamp; defaults to the most recent backup.
+
+```bash
+bash scripts/rollback-pack.sh <pack-name> <environment> [backup-timestamp]
+
+# Examples
+bash scripts/rollback-pack.sh days-survived prod              # latest backup
+bash scripts/rollback-pack.sh days-survived prod 20240115_142301
+```
+
+**What it does:**
+1. Locates the target backup under `logs/backups/<pack-name>-<timestamp>/`
+2. Requires typing `yes` before proceeding
+3. Restores the backup files to `packs/<pack-name>/`
+4. Re-deploys via `deploy-pack.sh`
+5. Appends a `ROLLBACK` entry to `logs/deployments.log`
+
 ---
 
 ## Test-to-Production Workflow
 
 ### Rule: never deploy directly to production without a test pass
 
+The recommended promotion path uses `promote-to-prod.sh`, which enforces the test-first check and requires explicit confirmation:
+
 ```
 1. Edit pack files
 2. bash scripts/validate-pack.sh packs/<pack-name>
 3. bash scripts/deploy-pack.sh <pack-name> test
 4. Verify behavior in the test world
-5. bash scripts/deploy-pack.sh <pack-name> prod
+5. bash scripts/promote-to-prod.sh <pack-name>
+```
+
+Alternatively, `deploy-pack.sh` can target production directly, but will prompt for confirmation:
+
+```bash
+bash scripts/deploy-pack.sh <pack-name> prod
+# Prompts: "Type 'yes' to confirm direct production deployment:"
 ```
 
 ### World Registration
@@ -170,27 +216,41 @@ docker restart <CONTAINER_NAME>
 
 ## Rollback Procedure
 
-### Quick rollback (revert last deploy)
+### Quick rollback with rollback-pack.sh
+
+Use the `rollback-pack.sh` script to restore the most recent automatic backup and re-deploy in one step:
+
+```bash
+# Roll back to the previous version on prod
+bash scripts/rollback-pack.sh days-survived prod
+
+# Roll back to a specific backup
+bash scripts/rollback-pack.sh days-survived prod 20240115_142301
+```
+
+The script lists available backups, prompts for confirmation, restores the pack files, re-deploys, and writes a `ROLLBACK` entry to the deployment log.
+
+### Manual rollback (revert via git)
 
 ```bash
 # Deploy the previous pack version from git
 git stash   # or git checkout <previous-commit> -- packs/<pack-name>
-bash scripts/deploy-pack.sh <pack-name> prod
+bash scripts/promote-to-prod.sh <pack-name>
 ```
 
 ### Manual rollback (copy backup)
 
-Deploy scripts automatically back up the previous pack version to `logs/backups/<pack-name>-<timestamp>/` before overwriting. To restore:
+Deploy scripts automatically back up the previous pack version to `logs/backups/<pack-name>-<timestamp>/` before overwriting. To restore manually:
 
 ```bash
 # Find the backup
 ls logs/backups/
 
 # Copy backup into the pack directory
-cp -r logs/backups/<pack-name>-<timestamp>/ packs/<pack-name>/
+cp -r logs/backups/<pack-name>-<timestamp>/<pack-name>/. packs/<pack-name>/
 
 # Re-deploy
-bash scripts/deploy-pack.sh <pack-name> prod
+bash scripts/promote-to-prod.sh <pack-name>
 ```
 
 ### Removing a pack entirely
@@ -204,11 +264,12 @@ To detach a pack from a world:
 
 ## Deployment Logs
 
-All deploy operations append a record to `logs/deployments.log`:
+All deploy and rollback operations append a record to `logs/deployments.log`:
 
 ```
-[2024-01-15 14:23:01] DEPLOY pack=days-survived env=test status=SUCCESS
-[2024-01-15 14:30:45] DEPLOY pack=days-survived env=prod status=SUCCESS
+[2024-01-15 14:23:01] DEPLOY pack=days-survived env=test uuid=<uuid> backup=logs/backups/days-survived-20240115_142301 status=SUCCESS
+[2024-01-15 14:30:45] DEPLOY pack=days-survived env=prod uuid=<uuid> backup=logs/backups/days-survived-20240115_143045 status=SUCCESS
+[2024-01-15 15:00:12] ROLLBACK pack=days-survived env=prod from=logs/backups/days-survived-20240115_142301 status=SUCCESS
 ```
 
 Logs are git-ignored. Rotate or archive them as needed.

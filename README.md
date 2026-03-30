@@ -40,7 +40,9 @@ minecraft-bedrock-addons/
 │   ├── build-pack.sh              # Package a named pack for deployment
 │   ├── deploy-pack.sh             # Deploy a single pack to a target environment
 │   ├── deploy-all.sh              # Deploy all packs to a target environment
-│   └── sync-to-container.sh       # Copy pack files into a running Docker container
+│   ├── sync-to-container.sh       # Copy pack files into a running Docker container
+│   ├── promote-to-prod.sh         # Safe test-verified production promotion workflow
+│   └── rollback-pack.sh           # Restore a pack from backup and re-deploy
 │
 ├── environments/                  # Per-environment config files
 │   ├── test.example.env           # Test server config template
@@ -113,7 +115,7 @@ bash scripts/deploy-pack.sh my-new-pack test
 After verifying behavior on the test server:
 
 ```bash
-bash scripts/deploy-pack.sh my-new-pack prod
+bash scripts/promote-to-prod.sh my-new-pack
 ```
 
 ---
@@ -125,7 +127,7 @@ Edit code  →  validate-pack.sh  →  deploy-pack.sh (test)
                                         ↓
                                Verify on test server
                                         ↓
-                            deploy-pack.sh (prod)  →  Done
+                          promote-to-prod.sh  →  Done
 ```
 
 Full details: [docs/addon-development-guide.md](docs/addon-development-guide.md)
@@ -140,10 +142,12 @@ Scripts read configuration from `environments/<env>.env` and copy pack files to 
 |---|---|
 | `validate-pack.sh` | Check structure, manifest fields, and JSON syntax |
 | `build-pack.sh` | Zip a pack for deployment or sharing |
-| `deploy-pack.sh` | Deploy one pack to a named environment |
+| `deploy-pack.sh` | Deploy one pack to a named environment (with prod confirmation guard) |
 | `deploy-all.sh` | Deploy every pack under `packs/` |
 | `sync-to-container.sh` | Copy files into a live Docker container |
 | `generate-uuid.sh` | Generate two unique UUID v4 values for a new manifest |
+| `promote-to-prod.sh` | Full test-verified promotion workflow: validate → test-check → confirm → prod |
+| `rollback-pack.sh` | Restore a pack from an automatic backup and re-deploy |
 
 Full details: [docs/deployment-guide.md](docs/deployment-guide.md)
 
