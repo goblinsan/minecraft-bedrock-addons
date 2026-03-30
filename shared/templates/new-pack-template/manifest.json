@@ -1,0 +1,17 @@
+{
+  "format_version": 2,
+  "header": {
+    "name": "Pack Name",
+    "description": "A short description of this behavior pack.",
+    "uuid": "REPLACE-WITH-UNIQUE-UUID-v4-HEADER",
+    "version": [1, 0, 0],
+    "min_engine_version": [1, 20, 0]
+  },
+  "modules": [
+    {
+      "type": "data",
+      "uuid": "REPLACE-WITH-UNIQUE-UUID-v4-MODULE",
+      "version": [1, 0, 0]
+    }
+  ]
+}

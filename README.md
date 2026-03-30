@@ -22,7 +22,8 @@ minecraft-bedrock-addons/
 ├── docs/                          # Project documentation
 │   ├── architecture.md            # Bedrock constraints, design decisions, scoreboard patterns
 │   ├── addon-development-guide.md # Step-by-step dev workflow per pack
-│   └── deployment-guide.md        # Deployment paths, testing, and rollback procedures
+│   ├── deployment-guide.md        # Deployment paths, testing, and rollback procedures
+│   └── roadmap.md                 # Planned packs: classes, quests, loot events, fun, economy
 │
 ├── packs/                         # One sub-directory per add-on pack
 │   └── days-survived/             # Example: days-survived behavior pack
@@ -33,25 +34,37 @@ minecraft-bedrock-addons/
 ├── shared/                        # Assets and templates shared across packs
 │   └── templates/
 │       ├── behavior-pack-manifest.json   # Manifest template with placeholder UUIDs
-│       └── resource-pack-manifest.json   # Resource pack manifest template
+│       ├── resource-pack-manifest.json   # Resource pack manifest template
+│       └── new-pack-template/            # Complete pack scaffold (used by new-pack.sh)
+│           ├── manifest.json
+│           └── functions/
+│               ├── tick.json
+│               └── template/
+│                   ├── init.mcfunction
+│                   └── tick.mcfunction
 │
 ├── scripts/                       # Shell scripts for validate/build/deploy workflows
+│   ├── new-pack.sh                # Scaffold a new pack from the template with auto-UUIDs
 │   ├── validate-pack.sh           # Validate structure, manifest, and JSON
 │   ├── build-pack.sh              # Package a named pack for deployment
 │   ├── deploy-pack.sh             # Deploy a single pack to a target environment
 │   ├── deploy-all.sh              # Deploy all packs to a target environment
 │   ├── sync-to-container.sh       # Copy pack files into a running Docker container
+│   ├── generate-uuid.sh           # Generate UUID v4 pairs; optionally inject into manifest
 │   ├── promote-to-prod.sh         # Safe test-verified production promotion workflow
 │   └── rollback-pack.sh           # Restore a pack from backup and re-deploy
 │
 ├── environments/                  # Per-environment config files
 │   ├── test.example.env           # Test server config template
-│   └── prod.example.env           # Production server config template
+│   ├── prod.example.env           # Production server config template
+│   ├── survival.example.env       # Multi-server: survival world config template
+│   └── creative.example.env       # Multi-server: creative world config template
 │
 ├── docker/
-│   └── examples/                  # Docker Compose examples for test and prod servers
-│       ├── docker-compose.test.yml
-│       └── docker-compose.prod.yml
+│   └── examples/                  # Docker Compose examples
+│       ├── docker-compose.test.yml    # Single test server
+│       ├── docker-compose.prod.yml    # Single production server
+│       └── docker-compose.multi.yml   # Two servers running in parallel
 │
 ├── logs/                          # Deployment logs (git-ignored)
 ├── .gitignore
@@ -89,10 +102,9 @@ cp environments/prod.example.env environments/prod.env
 ### 3. Create a New Pack
 
 ```bash
-# Copy the behavior pack manifest template into a new pack directory
-mkdir -p packs/my-new-pack
-cp shared/templates/behavior-pack-manifest.json packs/my-new-pack/manifest.json
-# Edit manifest.json — replace placeholder UUIDs and fill in name/description
+# Use new-pack.sh to scaffold a pack from the template (auto-generates UUIDs)
+bash scripts/new-pack.sh my-new-pack
+# Edit packs/my-new-pack/manifest.json — update name and description
 # Add your functions/ folder and mcfunction files
 ```
 
@@ -140,12 +152,13 @@ Scripts read configuration from `environments/<env>.env` and copy pack files to 
 
 | Script | Purpose |
 |---|---|
+| `new-pack.sh` | Scaffold a new pack from the template with auto-generated UUIDs |
 | `validate-pack.sh` | Check structure, manifest fields, and JSON syntax |
 | `build-pack.sh` | Zip a pack for deployment or sharing |
 | `deploy-pack.sh` | Deploy one pack to a named environment (with prod confirmation guard) |
 | `deploy-all.sh` | Deploy every pack under `packs/` |
 | `sync-to-container.sh` | Copy files into a live Docker container |
-| `generate-uuid.sh` | Generate two unique UUID v4 values for a new manifest |
+| `generate-uuid.sh` | Generate two UUID v4 values; optionally inject them into a manifest with `--inject` |
 | `promote-to-prod.sh` | Full test-verified promotion workflow: validate → test-check → confirm → prod |
 | `rollback-pack.sh` | Restore a pack from an automatic backup and re-deploy |
 
@@ -160,6 +173,7 @@ Full details: [docs/deployment-guide.md](docs/deployment-guide.md)
 | [architecture.md](docs/architecture.md) | Bedrock constraints, pack structure, manifest guidance, scoreboard patterns |
 | [addon-development-guide.md](docs/addon-development-guide.md) | How to create, validate, and iterate on a pack |
 | [deployment-guide.md](docs/deployment-guide.md) | Deployment workflow, test/prod promotion, rollback |
+| [roadmap.md](docs/roadmap.md) | Planned packs with recommended patterns: classes, daily quests, loot events, fun pack, economy |
 
 ---
 
