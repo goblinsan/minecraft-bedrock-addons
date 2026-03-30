@@ -17,6 +17,15 @@ fi
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 PACKS_DIR="${REPO_ROOT}/packs"
+ENV_FILE="${REPO_ROOT}/environments/${ENV_NAME}.env"
+
+# Load environment config to pick up ENABLED_PACKS (if set)
+if [[ -f "${ENV_FILE}" ]]; then
+  # shellcheck source=/dev/null
+  source "${ENV_FILE}"
+fi
+
+ENABLED_PACKS="${ENABLED_PACKS:-}"
 
 DEPLOYED=0
 FAILED=0
@@ -30,6 +39,23 @@ for pack_dir in "${PACKS_DIR}"/*/; do
   if [[ ! -f "${pack_dir}/manifest.json" ]]; then
     echo "SKIP: ${pack_name} (no manifest.json)"
     continue
+  fi
+
+  # Skip packs not in ENABLED_PACKS when the variable is set.
+  # Pack names are directory names and cannot contain spaces, so word-splitting
+  # ${ENABLED_PACKS} on whitespace is safe here.
+  if [[ -n "${ENABLED_PACKS}" ]]; then
+    enabled=false
+    for enabled_pack in ${ENABLED_PACKS}; do
+      if [[ "${pack_name}" == "${enabled_pack}" ]]; then
+        enabled=true
+        break
+      fi
+    done
+    if [[ "${enabled}" == "false" ]]; then
+      echo "SKIP: ${pack_name} (not in ENABLED_PACKS)"
+      continue
+    fi
   fi
 
   echo ""
