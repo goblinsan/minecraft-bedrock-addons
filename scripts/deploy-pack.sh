@@ -43,45 +43,41 @@ fi
 echo "==> Validating ${PACK_NAME}..."
 bash "${SCRIPT_DIR}/validate-pack.sh" "${PACK_DIR}"
 
-# --- Read pack UUID and version from manifest ---
+# --- Read pack UUID, version, and module type from manifest ---
 MANIFEST="${PACK_DIR}/manifest.json"
 PACK_UUID=$(jq -r '.header.uuid' "${MANIFEST}")
 PACK_VERSION=$(jq -c '.header.version' "${MANIFEST}")
+MODULE_TYPE=$(jq -r '.modules[0].type // "data"' "${MANIFEST}")
 
-echo "==> Deploying ${PACK_NAME} (UUID: ${PACK_UUID}) to ${ENV_NAME}..."
+# Module type "resources" indicates a resource pack; all other types (data,
+# script, world_template, etc.) are treated as behavior packs.
+if [[ "${MODULE_TYPE}" == "resources" ]]; then
+  PACK_KIND="resource"
+  PACK_DEST="${RESOURCE_PACK_DEST}"
+else
+  PACK_KIND="behavior"
+  PACK_DEST="${BEHAVIOR_PACK_DEST}"
+fi
+
+echo "==> Deploying ${PACK_NAME} (${PACK_KIND}, UUID: ${PACK_UUID}) to ${ENV_NAME}..."
 
 # --- Back up existing pack in the container ---
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 BACKUP_DIR="${REPO_ROOT}/logs/backups/${PACK_NAME}-${TIMESTAMP}"
 mkdir -p "${REPO_ROOT}/logs/backups"
 
-if docker exec "${CONTAINER_NAME}" test -d "${BEHAVIOR_PACK_DEST}/${PACK_NAME}" 2>/dev/null; then
+if docker exec "${CONTAINER_NAME}" test -d "${PACK_DEST}/${PACK_NAME}" 2>/dev/null; then
   echo "==> Backing up existing pack to ${BACKUP_DIR}..."
   mkdir -p "${BACKUP_DIR}"
-  docker cp "${CONTAINER_NAME}:${BEHAVIOR_PACK_DEST}/${PACK_NAME}" "${BACKUP_DIR}/"
+  docker cp "${CONTAINER_NAME}:${PACK_DEST}/${PACK_NAME}" "${BACKUP_DIR}/"
 fi
 
 # --- Copy pack into the container ---
-echo "==> Copying pack files to ${CONTAINER_NAME}:${BEHAVIOR_PACK_DEST}/${PACK_NAME}..."
-docker cp "${PACK_DIR}/." "${CONTAINER_NAME}:${BEHAVIOR_PACK_DEST}/${PACK_NAME}"
+echo "==> Copying pack files to ${CONTAINER_NAME}:${PACK_DEST}/${PACK_NAME}..."
+docker cp "${PACK_DIR}/." "${CONTAINER_NAME}:${PACK_DEST}/${PACK_NAME}"
 
-# --- Update world_behavior_packs.json ---
-WORLD_BP_JSON="${HOST_WORLD_PATH}/world_behavior_packs.json"
-
-if [[ -f "${WORLD_BP_JSON}" ]]; then
-  # Add or update the pack entry
-  UPDATED=$(jq --arg uuid "${PACK_UUID}" --argjson version "${PACK_VERSION}" '
-    if any(.[]; .pack_id == $uuid)
-    then map(if .pack_id == $uuid then .version = $version else . end)
-    else . + [{"pack_id": $uuid, "version": $version}]
-    end
-  ' "${WORLD_BP_JSON}")
-  echo "${UPDATED}" > "${WORLD_BP_JSON}"
-  echo " OK: Updated world_behavior_packs.json"
-else
-  echo "[{\"pack_id\": \"${PACK_UUID}\", \"version\": ${PACK_VERSION}}]" > "${WORLD_BP_JSON}"
-  echo " OK: Created world_behavior_packs.json"
-fi
+# --- Register the pack in the world's pack JSON ---
+bash "${SCRIPT_DIR}/register-world-packs.sh" "${PACK_UUID}" "${PACK_VERSION}" "${PACK_KIND}" "${ENV_NAME}"
 
 # --- Restart the container ---
 echo "==> Restarting ${CONTAINER_NAME}..."
